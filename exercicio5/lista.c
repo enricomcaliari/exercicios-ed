@@ -15,26 +15,31 @@ Lista *criaLista()
 
 Lista *insereProdutoLista(Lista *l, Produto *p)
 {
-    Lista *aux;
+    Lista *aux = l;
     for (aux = l; aux != NULL; aux = aux->prox)
     {
         if (getCodigoProduto(aux->produto) == getCodigoProduto(p))
         {
             printf("\nCodigo ja cadastrado\n");
             liberaProduto(p);
-            return NULL;
+            return l;
         }
+    }
+
+    if (l == NULL)
+    {
+        l = (Lista *)malloc(sizeof(Lista));
+        l->produto = p;
+        l->ant = NULL;
+        l->prox = NULL;
+        return l;
     }
 
     Lista *nova = (Lista *)malloc(sizeof(Lista));
     nova->produto = p;
-    nova->ant = NULL;
     nova->prox = l;
-
-    if (l != NULL)
-    {
-        l->ant = nova;
-    }
+    nova->ant = NULL;
+    l->ant = nova;
 
     printf("\nProduto cadastrado com sucesso\n");
 
@@ -43,43 +48,45 @@ Lista *insereProdutoLista(Lista *l, Produto *p)
 
 Lista *retiraProdutoLista(Lista *l, int codigo)
 {
-    Lista *p = NULL;
+    if (getCodigoProduto(l->produto) == codigo && l->ant == NULL && l->prox == NULL)
+    {
+        liberaProduto(l->produto);
+        free(l);
+        return NULL;
+    }
+
+    if (getCodigoProduto(l->produto) == codigo)
+    {
+        Lista *temp = l->prox;
+        liberaProduto(l->produto);
+        free(l);
+        temp->ant = NULL;
+        return temp;
+    }
+
     for (Lista *aux = l; aux != NULL; aux = aux->prox)
     {
         if (getCodigoProduto(aux->produto) == codigo)
         {
-            p = aux;
+            if (aux->prox == NULL)
+            {
+                Lista *temp = aux->ant;
+                liberaProduto(aux->produto);
+                free(aux);
+                temp->prox = NULL;
+                return l;
+            }
+            Lista *tempAnt = aux->ant;
+            Lista *tempProx = aux->prox;
+
+            liberaProduto(aux->produto);
+            free(aux);
+            tempAnt->prox = tempProx;
+            tempProx->ant = tempAnt;
+
+            return l;
         }
     }
-
-    if (p == NULL)
-    {
-        printf("\nProduto nao encontrado\n");
-        return NULL;
-    }
-
-    if (p->ant != NULL)
-    {
-        p->ant->prox = p->prox;
-    }
-    else
-    {
-        l = p->prox;
-        l->ant = NULL;
-    }
-
-    if (p->prox != NULL)
-    {
-        p->prox->ant = p->ant;
-    }
-    else
-    {
-        p->ant->prox = NULL;
-    }
-
-    liberaProduto(p->produto);
-    free(p);
-    printf("\nProduto removido com sucesso\n");
 
     return l;
 }
@@ -94,7 +101,7 @@ void imprimeLista(Lista *l)
     {
         printf("\nLista:\n");
 
-        for (Lista *aux; aux != NULL; aux = aux->prox)
+        for (Lista *aux = l; aux != NULL; aux = aux->prox)
         {
             imprimeProduto(aux->produto);
         }
