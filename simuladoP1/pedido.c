@@ -3,18 +3,18 @@
 #include <string.h>
 #include "pedido.h"
 
-typedef struct celula Celula;
+typedef struct celula TCelula;
 
 struct celula
 {
     TProduto *produto;
-    Celula *prox;
+    TCelula *prox;
 };
 
 struct pedido
 {
     char *dono;
-    Celula *prim, *ult;
+    TCelula *prim, *ult;
 };
 
 TPedido *InicPedido(char *dono)
@@ -30,57 +30,57 @@ TPedido *InicPedido(char *dono)
 
 void IncluiProdutoPedido(TPedido *pedido, TProduto *prod)
 {
-    Celula *aux;
-    for (aux = pedido->prim; aux != NULL; aux = aux->prox)
+    for (TCelula *aux = pedido->prim; aux != NULL; aux = aux->prox)
     {
         if (!strcmp(RetornaNome(aux->produto), RetornaNome(prod)))
         {
-            printf("Produto ja existe no pedido\n");
+            printf("Produto já existe no pedido\n");
             DestroiProd(prod);
             return;
         }
     }
 
-    Celula *nova = (Celula *)malloc(sizeof(Celula));
+    TCelula *novo = (TCelula *)malloc(sizeof(TCelula));
+    novo->produto = prod;
 
-    if (pedido->prim == NULL && pedido->ult == NULL)
+    if (pedido->prim == NULL)
     {
-        pedido->prim = nova;
-        pedido->ult = nova;
+        pedido->prim = novo;
+        pedido->ult = novo;
     }
     else
     {
-        pedido->ult->prox = nova;
-        pedido->ult = nova;
+        pedido->ult->prox = novo;
+        pedido->ult = novo;
     }
 
-    pedido->ult->produto = prod;
     pedido->ult->prox = NULL;
 }
 
 void ImprimePedido(TPedido *pedido)
 {
-    printf("Cliente: %s\n", pedido->dono);
+    printf("\nCliente: %s\n", pedido->dono);
 
-    if (pedido->prim == NULL && pedido->ult == NULL)
+    if (pedido->prim == NULL)
     {
-        printf("Nao ha produtos nesse pedido!\n");
+        printf("Nao ha produtos neste pedido!\n");
         return;
     }
-
-    Celula *aux;
-    for (aux = pedido->prim; aux != NULL; aux = aux->prox)
+    else
     {
-        ImprimeIngredientes(aux->produto);
+        for (TCelula *aux = pedido->prim; aux != NULL; aux = aux->prox)
+        {
+            ImprimeIngredientes(aux->produto);
+        }
     }
 }
 
 void RetiraProdutoPedido(TPedido *pedido, char *prod)
 {
-    Celula *ant = NULL;
-    Celula *aux = pedido->prim;
+    TCelula *ant = NULL;
+    TCelula *aux = pedido->prim;
 
-    while (aux != NULL && strcmp(RetornaNome(aux->produto), prod) != 0)
+    while (aux != NULL && strcmp(RetornaNome(aux->produto), prod))
     {
         ant = aux;
         aux = aux->prox;
@@ -102,18 +102,17 @@ void RetiraProdutoPedido(TPedido *pedido, char *prod)
     if (aux == pedido->prim)
     {
         pedido->prim = aux->prox;
-    }
-    else
-    {
-        ant->prox = aux->prox;
+        free(aux);
+        return;
     }
 
+    ant->prox = aux->prox;
     free(aux);
 }
 
 int EnviaPedido(TPedido *pedido, int restricao_calorica, char *restricao_alimentar)
 {
-    Celula *aux;
+    TCelula *aux;
     int calorias = 0;
 
     for (aux = pedido->prim; aux != NULL; aux = aux->prox)
@@ -133,14 +132,14 @@ int EnviaPedido(TPedido *pedido, int restricao_calorica, char *restricao_aliment
     }
 
     aux = pedido->prim;
-    Celula *prox;
+    TCelula *prox;
     while (aux != NULL)
     {
         prox = aux->prox;
         free(aux);
         aux = prox;
     }
-    
+
     free(pedido->dono);
     free(pedido);
     return 1;
